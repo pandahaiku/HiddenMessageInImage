@@ -8,6 +8,7 @@ Requirements:
 4. Image file must be named "testImage.png"
 
 Instructions:
+
 Encoding message into image:
 1. run python encode.py
 
