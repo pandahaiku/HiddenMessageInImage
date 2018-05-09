@@ -16,10 +16,13 @@ hiding messages in the least significant bits of RGB values in pixels
 
 Encoding message into image:
 1. run python encode.py \<IMAGE FILE NAME> \<INPUT FILE NAME>
-2. where: \<IMAGE FILE NAME> = name of the image to manipulate
+2. where:
+
+          \<IMAGE FILE NAME> = name of the image to manipulate
+
           \<INPUT FILE NAME> = name of the file with the message contents
                     
-    Example: $python encode.py testImage.PNG input.txt
+          Example: $python encode.py testImage.PNG input.txt
 
 Decoding message from image:
 1. run python decode.py \<IMAGE FILE NAME>
