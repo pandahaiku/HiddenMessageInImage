@@ -15,14 +15,19 @@ def getLength(im):
         r = r & 1
         g = g & 1
         b = b & 1
+        print(r, g, b, end = '')
         length_string += str(r)
         length_string += str(g)
         length_string += str(b)
         x_value += 1
     # exclude B in 11th pixel
+    if x_value > (width - 1):
+        x_value = 0
+        y_value += 1
     r, g, b = pix[x_value, y_value]
     r = r & 1
     g = g & 1
+    print(r, g, end = '')
     length_string += str(r)
     length_string += str(g)
     # returns the length of the string as an integer
@@ -38,7 +43,7 @@ def getLength(im):
 def decode(imageFileName, outputFileName):
     # open image file
     with open(outputFileName, 'w') as file:
-        im = Image.open(imageFileName)
+        im = Image.open(imageFileName).convert('RGB')
         rotateim = im.rotate(180)
         pix = rotateim.load()
         width, height = rotateim.size
@@ -67,14 +72,14 @@ def decode(imageFileName, outputFileName):
         # check if extra characters need to be accounted for
         if message_length_mod == 1:
             # could possibly be the edge pixel on the right
-            if x_value == (width - 1):
+            if x_value > (width - 1):
                 x_value = 0
                 y_value += 1
             r, g, b = pix[x_value, y_value]
             r = r & 1
             message_string += str(r)
         elif message_length_mod == 2:
-            if x_value == (width - 1):
+            if x_value > (width - 1):
                 x_value = 0
                 y_value += 1
             r, g, b = pix[x_value, y_value]

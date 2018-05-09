@@ -6,8 +6,8 @@ def getLength(message):
         exit()
     return len(message) * 8
 
-def encodeLength(fileName, length):
-    im = Image.open(fileName)
+def encodeLength(imageFileName, length):
+    im = Image.open(imageFileName).convert('RGB')
     im = im.rotate(180)
     pix = im.load()
     width, height = im.size
@@ -45,6 +45,9 @@ def encodeLength(fileName, length):
         pix[x_value, y_value] = (r, g, b)
         x_value += 1
     # 11th pixel which ignores b value
+    if x_value > (width - 1):
+        x_value = 0
+        y_value += 1
     r, g, b = pix[x_value, y_value]
     if r & 1 == 1 and length_string[string_index] == '0':
         r = r ^ 1
@@ -55,11 +58,11 @@ def encodeLength(fileName, length):
     pix[x_value, y_value] = (r, g, b)
 
     im = im.rotate(180)
-    im.save(fileName, "PNG")
+    im.save(imageFileName, "PNG")
 
-def getMessage(fileName):
+def getMessage(inputFileName):
     # TEST read as binary file
-    with open(fileName, 'r') as file:
+    with open(inputFileName, 'r') as file:
         fileContents = file.read()
         return fileContents
 
@@ -72,11 +75,11 @@ def getbitString(character):
     return bitString
 
 
-def encodeMessage(fileName, message):
+def encodeMessage(imageFileName, message):
     length = getLength(message)
     message_length_mod = length % 3
     length //= 3
-    im = Image.open(fileName)
+    im = Image.open(imageFileName).convert('RGB')
     im = im.rotate(180)
     pix = im.load()
     width, height = im.size
@@ -137,7 +140,7 @@ def encodeMessage(fileName, message):
     # mod message length
     if message_length_mod == 1:
         # could possibly be the edge pixel on the right
-        if x_value == (width - 1):
+        if x_value > (width - 1):
             x_value = 0
             y_value += 1
         r, g, b = pix[x_value, y_value]
@@ -147,7 +150,7 @@ def encodeMessage(fileName, message):
             r = r ^ 1
         pix[x_value, y_value] = (r, g, b)
     elif message_length_mod == 2:
-        if x_value == (width - 1):
+        if x_value > (width - 1):
             x_value = 0
             y_value += 1
         r, g, b = pix[x_value, y_value]
@@ -162,7 +165,7 @@ def encodeMessage(fileName, message):
             g = g ^ 1
         pix[x_value, y_value] = (r, g, b)
     im = im.rotate(180)
-    im.save(fileName, "PNG")
+    im.save(imageFileName, "PNG")
 
 def encode(imageFileName, inputFileName):
     # get some input MESSAGE and save as message
