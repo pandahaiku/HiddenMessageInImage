@@ -18,3 +18,4 @@ Decoding message from image:
 Notes:
 1. the message contents of decode.py will be outputted to "output.txt"
 2. When encoding, the image file will be saved as a PNG file to avoid data loss
+3. Non UTF-8 characters will not be recognized and cause the program to hang
