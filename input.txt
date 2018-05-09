@@ -1,16 +1,297 @@
+Douglas Galm
+CPSC 353 Final Project
+
+
+SOURCE CODE FOR encode.py
+----------------------------------------------------------------------
+
 from PIL import Image
 
-# returns the length of the strings
-def getLength(im):
+#######################################################
+# gets the legth of the message in bits
+# @param message - the message to encode
+# @return - the length of the message in bits
+#######################################################
+def getLength(message):
+
+    # check if the message is empty
+    if len(message) == 0:
+        print("Message has no contents")
+        exit()
+
+    return len(message) * 8
+
+
+############################################################
+# encodes the length of the message on the first 11 pixels
+# @param imageFileName - the path to the image file
+# @param length - the length of the message
+# @return - none
+############################################################
+def encodeLength(imageFileName, length):
+    # open the image and rotate 180 degrees
+    # convert to 'RGB' for compatability
+    im = Image.open(imageFileName).convert('RGB')
+    im = im.rotate(180)
     pix = im.load()
     width, height = im.size
-    length_string = ""
+    print("WIDTH: ", width, "HEIGHT: ", height)
+
+    # convert message length into binary string and check for
+    # extremely large messages that won't fit the image
+    if (length//3) > (width*height):
+        print("Message too large to fit image")
+        exit()
+    print("Length of the message in bits: ", length)
+
+    # convert the length to a binary string of 32 bits
+    length_string = '{0:032b}'.format(length)
+    string_index = 0
     x_value = 0
     y_value = 0
+
+    # loop through the first 10 pixels
     for x in range(10):
+
+        # check for edge of image and increment y if needed
         if x_value > (width - 1):
             x_value = 0
             y_value += 1
+
+        r, g, b = pix[x_value, y_value]
+
+        # check if the least sig bit of R is what we want
+        # if NOT then R = flip the least sig bit
+        if (r & 1) != int(length_string[string_index]):
+            r = r ^ 1
+        string_index += 1
+
+        # same but for G
+        if (g & 1) != int(length_string[string_index]):
+            g = g ^ 1
+        string_index += 1
+
+        # same but for B
+        if (b & 1) != int(length_string[string_index]):
+            b = b ^ 1
+        string_index += 1
+
+        # write the correct RGB value at the right position
+        pix[x_value, y_value] = (r, g, b)
+        x_value += 1
+
+    # 11th pixel which ignores b value
+    if x_value > (width - 1):
+        x_value = 0
+        y_value += 1
+
+    r, g, b = pix[x_value, y_value]
+
+    # same process as above but for ONLY r and g
+    if (r & 1) != int(length_string[string_index]):
+        r = r ^ 1
+    string_index += 1
+    if (g & 1) != int(length_string[string_index]):
+        g = g ^ 1
+    string_index += 1
+    pix[x_value, y_value] = (r, g, b)
+
+    # revert the image to it's original orientation
+    im = im.rotate(180)
+    im.save(imageFileName, "PNG")
+
+
+#######################################################
+# loads the message from an input file
+# @param inputFileName - path to the input file
+# @return - contents of the file as a string
+#######################################################
+def getMessage(inputFileName):
+    # TEST read as binary file
+    with open(inputFileName, 'r') as file:
+        fileContents = file.read()
+        return fileContents
+
+
+########################################################################
+# converts a character to an 8 bit binary string
+# @param character - signle character
+# @return - 8 bit binary string corresponding to the right character
+########################################################################
+def getbitString(character):
+    bitString = bin(int.from_bytes(character.encode(), 'big'))
+
+    # remove '0b' from the string
+    bitString = bitString[2:]
+
+    # pad with leading zeros
+    while(len(bitString) != 8):
+        bitString = '0' + bitString
+
+    return bitString
+
+
+#######################################################
+# encodes the message onto the image
+# @param imageFileName - path to the input file
+# @param message - the message to encode
+# @return - none
+#######################################################
+def encodeMessage(imageFileName, message):
+    # get length and convert to amount of pixels
+    # mod handles uneven situations
+    length = getLength(message)
+    message_length_mod = length % 3
+    length //= 3
+
+    # open image and rotate 180 degrees
+    im = Image.open(imageFileName)
+    im = im.rotate(180)
+    pix = im.load()
+    width, height = im.size
+
+    # message_counter indexes which character
+    # is currently being written
+    message_counter = 0
+    string_index = 0
+    x_value = 0
+    y_value = 0
+
+    # loop through first 11 pixels to get starting x and y value
+    for x in range(11):
+        # check for possible edge pixel
+        if x_value > (width - 1):
+            x_value = 0
+            y_value += 1
+        x_value += 1
+
+    # convert character at message_counter to 8 bit binary string
+    bitString = getbitString(message[message_counter])
+    message_counter += 1
+
+    # starting at the 12th pixel
+    for x in range(1, length + 1):
+        if x_value > (width - 1):
+            x_value = 0
+            y_value += 1
+
+        r, g, b = pix[x_value, y_value]
+
+        # check if a full 8 bit string has been written
+        # then reset values and get the next 8 bits
+        if string_index >= 8:
+            string_index = 0
+            bitString = ''
+            bitString = getbitString(message[message_counter])
+            message_counter += 1
+
+        # check if the least sig bit of R is what we want
+        # if NOT then R = flip the least sig bit
+        if (r & 1) != int(bitString[string_index]):
+            r = r ^ 1
+        string_index += 1
+
+        if string_index >= 8:
+            string_index = 0
+            bitString = ''
+            bitString = getbitString(message[message_counter])
+            message_counter += 1
+
+        # same for G
+        if (g & 1) != int(bitString[string_index]):
+            g = g ^ 1
+        string_index += 1
+
+        if string_index >= 8:
+            string_index = 0
+            bitString = ''
+            bitString = getbitString(message[message_counter])
+            message_counter += 1
+
+        # same for B
+        if (b & 1) != int(bitString[string_index]):
+            b = b ^ 1
+        string_index += 1
+
+        # write R G B values and continue to next pixel
+        pix[x_value, y_value] = (r, g, b)
+        x_value += 1
+
+    # check for uneven cases
+    if message_length_mod == 1:
+        # check for edge pixel
+        if x_value > (width - 1):
+            x_value = 0
+            y_value += 1
+        r, g, b = pix[x_value, y_value]
+
+        # check if the least sig bit of R is what we want
+        if (r & 1) != int(bitString[string_index]):
+            r = r ^ 1
+        pix[x_value, y_value] = (r, g, b)
+
+    elif message_length_mod == 2:
+        # check for edge pixel
+        if x_value > (width - 1):
+            x_value = 0
+            y_value += 1
+        r, g, b = pix[x_value, y_value]
+
+        # check if least sig bit of R is what we want
+        if (r & 1) != int(bitString[string_index]):
+            r = r ^ 1
+        string_index += 1
+
+        # same for G
+        if (g & 1) != int(bitString[string_index]):
+            g = g ^ 1
+        pix[x_value, y_value] = (r, g, b)
+
+    # revert the image to it's original orientation
+    im = im.rotate(180)
+    im.save(imageFileName, "PNG")
+
+
+# main
+if __name__ == '__main__':
+    message = getMessage("input.txt")
+    message_length = getLength(message)
+    encodeLength("testimage.PNG", message_length)
+    encodeMessage("testimage.PNG", message)
+
+----------------------------------------------------------------------
+
+SOURCE CODE FOR decode.py
+----------------------------------------------------------------------
+
+from PIL import Image
+
+##################################################
+# Returns the legnth of the message
+# @param im - python pillow image file
+# @return - integer lenght of message in bits
+##################################################
+def getLength(im):
+
+    # load the image and initialize variables
+    # Image will already be rotated 180 degrees
+    pix = im.load()
+    width, height = im.size
+    length_string = ""
+
+    # x and y value are the coordinates of the pixels
+    x_value = 0
+    y_value = 0
+
+    # loop through first 10 pixels
+    for x in range(10):
+
+        # check for edge of image and increment y if needed
+        if x_value > (width - 1):
+            x_value = 0
+            y_value += 1
+
+        # set r, g, b to be the least significant bit
         r, g, b = pix[x_value, y_value]
         r = r & 1
         g = g & 1
@@ -19,37 +300,85 @@ def getLength(im):
         length_string += str(g)
         length_string += str(b)
         x_value += 1
+
     # exclude B in 11th pixel
+    if x_value > (width - 1):
+        x_value = 0
+        y_value += 1
     r, g, b = pix[x_value, y_value]
     r = r & 1
     g = g & 1
     length_string += str(r)
     length_string += str(g)
-    # returns the length of the string as an integer
+
+    # convert binary string to integer
     length_string = int(length_string, base = 2)
     print("Length of message in bits: ", length_string)
+
+    # handle error if message does not exist
     if length_string == 0:
         print("Message length is zero")
         exit()
+
     return length_string
 
 
-# returns the decoded message
-def decode(imageFileName, outputFileName):
-    # open image file
+###########################################################################
+# Writes the contents of the message to a file
+# @param message - the decoded message
+# @param outputFileName - the path to the output file to write the message
+# @return - none
+###########################################################################
+def writeToFile(message, outputFileName):
     with open(outputFileName, 'w') as file:
+
+        # read message_string byte by byte and convert each byte
+        # to a character, then write each character to a file
+        message_byte = ""
+        for x in range(len(message)):
+
+            # check if a full byte has been loaded
+            if x % 8 == 0 and x != 0:
+
+                # converts the 8 bit string to an binary integer
+                message_byte = int(message_byte, base=2)
+                file.write((chr(message_byte)))
+                message_byte = ""
+
+            # keep adding characters until a byte is filled
+            message_byte += message[x]
+
+        # print final character
+        message_byte = int(message_byte, base=2)
+        file.write((chr(message_byte)))
+        print("Decoded message written to: ", outputFileName)
+
+
+#######################################################
+# gets the contents of the message
+# @param imageFileName - the path to the image file
+# @return - decoded message
+#######################################################
+def decode(imageFileName):
+        # open image and rotate 180 degrees
         im = Image.open(imageFileName)
         rotateim = im.rotate(180)
         pix = rotateim.load()
+
+        # message_length_mod handles uneven situations
+        # where we might not need the G or B pixels
         width, height = rotateim.size
         print("WIDTH: ", width, "HEIGHT: ", height)
         message_length = getLength(rotateim)
         message_string = ""
         message_length_mod = message_length % 3
+
         # convert message_length into number of pixels
         message_length //= 3
         y_value = 0
         x_value = 0
+
+        # loop through message length and message
         for x in range(message_length + 11):
             if x_value > (width - 1):
                 x_value = 0
@@ -58,6 +387,9 @@ def decode(imageFileName, outputFileName):
             r = r & 1
             g = g & 1
             b = b & 1
+
+            # only start adding to the message when the
+            # 12th pixel has been encountered
             if x > 10:
                 message_string += str(r)
                 message_string += str(g)
@@ -66,35 +398,36 @@ def decode(imageFileName, outputFileName):
 
         # check if extra characters need to be accounted for
         if message_length_mod == 1:
-            # could possibly be the edge pixel on the right
-            if x_value == (width - 1):
+
+            # check for the edge pixel
+            if x_value > (width - 1):
                 x_value = 0
                 y_value += 1
+
+            # account ONLY for r
             r, g, b = pix[x_value, y_value]
             r = r & 1
             message_string += str(r)
+
+        # chekc if extra characters need to be accounted for
         elif message_length_mod == 2:
-            if x_value == (width - 1):
+
+            # check for the edge pixel
+            if x_value > (width - 1):
                 x_value = 0
                 y_value += 1
-            r, g, b = pix[x_value, y_value]
+
+            # account for r and g but NOT b
             r, g, b = pix[x_value, y_value]
             r = r & 1
             g = g & 1
             message_string += str(r)
             message_string += str(g)
 
-        message_byte = ""
-        for x in range(len(message_string)):
-            if x % 8 == 0 and x != 0:
-                message_byte = int(message_byte, base=2)
-                file.write((chr(message_byte)))
-                message_byte = ""
-            message_byte += message_string[x]
-        # print final character
-        message_byte = int(message_byte, base=2)
-        file.write((chr(message_byte)))
-        print("Decoded message written to: ", outputFileName)
+        return message_string
 
 # main
-decode("testimage.PNG", "output.txt")
+if __name__ == '__main__':
+    decodedMessage = decode("testimage.PNG")
+    writeToFile(decodedMessage, "output.txt")
+
