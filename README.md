@@ -19,13 +19,13 @@ Encoding message into image:
 2. where: <IMAGE FILE NAME> = name of the image to manipulate
           <INPUT FILE NAME> = name of the file with the message contents
                     
-    Example: $python encode.py testimage.PNG input.txt
+    Example: $python encode.py testImage.PNG input.txt
 
 Decoding message from image:
 1. run python decode.py <IMAGE FILE NAME>
 2. where: <IMAGE FILE NAME> = name of the image to decode
    
-    Example: $python decode.py testimage.PNG
+    Example: $python decode.py testImage.PNG
 
 # Notes:
 1. the message contents of decode.py will be outputted to "output.txt"
