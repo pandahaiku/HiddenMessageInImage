@@ -15,7 +15,7 @@ hiding messages in the least significant bits of RGB values in pixels
 # Instructions:
 
 Encoding message into image:
-1. run python encode.py '<IMAGE FILE NAME>' '<INPUT FILE NAME>'
+1. run python encode.py \<IMAGE FILE NAME> \<INPUT FILE NAME>
 2. where: '<IMAGE FILE NAME>' = name of the image to manipulate
           '<INPUT FILE NAME>' = name of the file with the message contents
                     
