@@ -1,4 +1,5 @@
 from PIL import Image
+import sys
 
 #######################################################
 # gets the legth of the message in bits
@@ -246,8 +247,28 @@ def encodeMessage(imageFileName, message):
 
 
 # main
-if __name__ == '__main__':
-    message = getMessage("input.txt")
+def main():
+
+    # make sure that all the arguments have been provided
+    if len(sys.argv) < 3:
+        print("USAGE: " + sys.argv[0] + "<IMAGE FILE NAME> <INPUT FILE NAME>")
+        exit(-1)
+
+    # The image file
+    imageFileName = sys.argv[1]
+
+    # The input file
+    inputFileName = sys.argv[2]
+
+    # get message from input file
+    message = getMessage(inputFileName)
     message_length = getLength(message)
-    encodeLength("testimage.PNG", message_length)
-    encodeMessage("testimage.PNG", message)
+
+    # encode length and message from image file
+    encodeLength(imageFileName, message_length)
+    encodeMessage(imageFileName, message)
+
+
+### Call the main function ###
+if __name__ == "__main__":
+	main()

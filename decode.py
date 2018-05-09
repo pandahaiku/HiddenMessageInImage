@@ -1,4 +1,5 @@
 from PIL import Image
+import sys
 
 ##################################################
 # Returns the legnth of the message
@@ -161,6 +162,22 @@ def decode(imageFileName):
         return message_string
 
 # main
-if __name__ == '__main__':
-    decodedMessage = decode("testimage.PNG")
+def main():
+
+    # make sure that all the arguments have been provided
+    if len(sys.argv) < 2:
+        print("USAGE: " + sys.argv[0] + "<IMAGE FILE NAME>")
+        exit(-1)
+
+    # The image file
+    imageFileName = sys.argv[1]
+
+    # decode message from the image file
+    decodedMessage = decode(imageFileName)
+
+    # write the decoded message to output.txt
     writeToFile(decodedMessage, "output.txt")
+
+### Call the main function ###
+if __name__ == "__main__":
+	main()
